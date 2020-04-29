@@ -18,7 +18,7 @@ public class Pattern_Reader {
     static int blue = 0;
     static boolean city = true;
     static int fishShips[][] = {{761, 698}, {697, 659}, {637, 615}, {566, 583}};
-    static int patterns = 15;
+    static int patterns = 14;
     static int x_axis = 0;
     static int y_axis = 0;
     static int compare_size = 3;
@@ -28,9 +28,12 @@ public class Pattern_Reader {
     static int x_screen_end = 1800;
     static int y_screen_end = 900;
     static boolean drevo_nalezeno;
+    static boolean zelezo_nalezeno;
     static boolean lod_vybrana = false;
     static boolean lod_vyzvednuta = false;
     static boolean kamen_nalezeno;
+    static boolean lod_vyslana;
+    static short material_lod = 0; //0=kamen,1=ryby,2=drevo
 
     static BufferedImage image;
     static BufferedImage image1;
@@ -94,9 +97,10 @@ public class Pattern_Reader {
             } else if (total_difference <= 120 && name.contains("zlato") && city == true) {
                 take_thing(x_axis, y_axis);
                 System.out.println(name + " shoda " + x_axis + " " + y_axis + " " + total_difference);
-            } else if (total_difference < 100 && name.contains("zelezo") && city == true) {
+            } else if (total_difference < 100 && name.contains("zelezo") && city == true && zelezo_nalezeno == false) {
                 take_thing(x_axis, y_axis);
                 nova_vyroba(x_axis, y_axis, name);
+                zelezo_nalezeno = true;
                 System.out.println(name + " shoda " + x_axis + " " + y_axis + " " + total_difference);
             } else if (total_difference < 20 && name.contains("pila") && city == true) {
                 //take_thing(x_axis,y_axis);
@@ -115,12 +119,32 @@ public class Pattern_Reader {
                 nova_vyroba(x_axis, y_axis, name);
                 kamen_nalezeno = true;
             } else if (total_difference < 130 && name.contains("kapitan") && name.contains("Vyplout") && city == false&& lod_vybrana == false) {
-                //posli lod
-                lod_vybrana = false;
+                System.out.println("vyplouvam");
+                take_thing(x_axis - 80,y_axis+20);
+                lod_vybrana = true;
             } else if (total_difference < 130 && name.contains("kapitan") && name.contains("Vyzvednout") && city == false&& lod_vyzvednuta == false) {
-                take_thing(x_axis - 80, y_axis + 20);
-                lod_vyzvednuta = true;
+                BufferedImage image2 = clicker.createScreenCapture(screenRectangle);
+                int[][] col_v = {{0, 0, 0}};
+                int cc[] = {pixReader(x_axis-80, y_axis+20, 0, 0, 0, image2), pixReader(x_axis-80, y_axis+20, 0, 0, 1, image2), pixReader(x_axis-80, y_axis+20, 0, 0, 2, image2)};
+                col_v[0] = cc;
+                if (pixReader(x_axis, y_axis, 0, 0, 1, image2)<150){
+                    take_thing(x_axis - 80, y_axis + 20);
+                    lod_vyzvednuta = true;
+                }
+            }else if (total_difference<=100&& name.contains("kamen")&& city==false&& lod_vybrana== true&&material_lod==0&&lod_vyslana==false){
+                take_thing(x_axis,y_axis);
+                nova_vyroba(x_axis,y_axis,name);
+                lod_vyslana = true;
+            }else if (total_difference<=100&& name.contains("zlato_Vodstvo")&& city==false&& lod_vybrana== true&&material_lod==1&&lod_vyslana==false){
+                take_thing(x_axis,y_axis);
+                nova_vyroba(x_axis,y_axis,name);
+                lod_vyslana = true;
+            }else if (total_difference<=100&& name.contains("ryby_Vodstvo")&& city==false&& lod_vybrana== true&&material_lod==2&&lod_vyslana==false){
+                take_thing(x_axis,y_axis);
+                nova_vyroba(x_axis,y_axis,name);
+                lod_vyslana = true;
             }
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -224,11 +248,16 @@ public class Pattern_Reader {
         image = clicker.createScreenCapture(screenRectangle);
         int colorss[][] = new int[square_size][3];
         int vysledek = 0;
+        material_lod++;
+        if (material_lod==3)
+            material_lod=0;
+        drevo_nalezeno = false;
+        zelezo_nalezeno = false;
+        lod_vyzvednuta = false;
+        lod_vybrana = false;
+        kamen_nalezeno = false;
+        lod_vyslana = false;
         for (int q = 0; q < patterns; q++) {
-            drevo_nalezeno = false;
-            lod_vyzvednuta = false;
-            lod_vybrana = false;
-            kamen_nalezeno = false;
             for (int x = x_screen_start; x < x_screen_end; ++x) {
                 for (int y = y_screen_start; y < y_screen_end; ++y) {
                     for (int i = 0; i < compare_size; i++) {//x axis move
@@ -238,16 +267,6 @@ public class Pattern_Reader {
                         }
                     }
                     pattern_read(colorss);
-                    //if something found
-                    if (name.contains("barel")) {
-                        vysledek++;
-                    } else if (name.contains("rybar")) {
-
-                    } else if (name.contains("Plavidlo")) {
-                        //lod k vyslani
-                    } else if (name.contains("Vylepseni")) {
-
-                    }
                 }
             }
             new_pattern = true;
